@@ -128,13 +128,14 @@ class PovConvert:
         
     def parsearguments(self,args=None):
         parser = argparse.ArgumentParser(description='POV Image Handler')
-        parser.add_argument("--action",choices=["load","convert","run"],required=True,help="run = convert then load")
-        parser.add_argument("--colour",default="white",type=self.parseColour)
-        parser.add_argument("--inverted",action="store_true")
-        parser.add_argument("--open",type=self.parseOpen,default="LeftRight")
-        parser.add_argument("--close",type=self.parseClose,default="RightLeft")
-        parser.add_argument("--display",type=self.parseDisplay,default="Clockwise")
-        parser.add_argument("--rotate",type=int,default=0)
+        parser.add_argument("--action",choices=["load","convert","run"],required=True,
+                            help="load = send image to display, convert = create displayable image,run = convert then load")
+        parser.add_argument("--colour",default="white",type=self.parseColour,help=",".join(Colour.__members__.keys()))
+        parser.add_argument("--inverted",action="store_true",help="Invert pixel colours from black to white")
+        parser.add_argument("--open",type=self.parseOpen,default="LeftRight",help=",".join(OpenTransition.__members__.keys()))
+        parser.add_argument("--close",type=self.parseClose,default="RightLeft",help=",".join(CloseTransition.__members__.keys()))
+        parser.add_argument("--display",type=self.parseDisplay,default="Clockwise",help=",".join(MessageStyle.__members__.keys()))
+        parser.add_argument("--rotate",type=int,default=0,help="Rotate image on convert (degrees)")
         parser.add_argument("infile")
         parser.add_argument("outfile",nargs="?")
         parsed=parser.parse_args(args)
