@@ -1,0 +1,5 @@
+# script format: filename colour inverted open display close
+# Arguments left blank or with (-) will use defaults or command line values.
+# = comments
+wombatcvt.png blue true Clockwise Remain LeftRight
+crosshairs.png red false - Flash -

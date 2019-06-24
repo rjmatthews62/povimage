@@ -1,8 +1,7 @@
 from PIL import Image, ImageDraw
 from usbfan import Colour, Column, Device, Message, Program, OpenTransition,CloseTransition,MessageStyle
 from typing import Union,Any
-import math
-import argparse
+import math,argparse
 
 class PovConvert:
     OUTER_DIAMETER=160
@@ -88,6 +87,45 @@ class PovConvert:
         d = Device()
         d.program(p)
 
+    def runscript(self,filename, defaults):
+        """
+        script format: filename colour inverted open display close
+        Arguments left blank or with (-) will use defaults or command line values.
+        # = comments
+        """
+        if defaults==None:
+            defaults=argparse.Namespace()
+            defaults.inverted=False
+            defaults.open=OpenTransition.LeftRight
+            defaults.close=CloseTransition.RightLeft
+            defaults.display=MessageStyle.Anticlockwise
+            defaults.colour=Colour.white
+        messages=[]
+        with open(filename,"r") as f:
+            for line in f:
+                line=line.strip()
+                if line=="" or line.startswith("#"):
+                    continue
+                msg={}
+                msg["filename"]=""
+                msg["inverted"]=defaults.inverted
+                msg["colour"]=defaults.colour
+                msg["open"]=defaults.open
+                msg["close"]=defaults.close
+                msg["display"]=defaults.display
+                args=line.split()
+                msg["filename"]=args[0]
+                if (len(args)>1 and args[1]!="-"): msg["colour"]=self.parseColour(args[1])
+                if (len(args)>2 and args[2]!="-"): msg["inverted"]=self.parseBool(args[2])
+                if (len(args)>3 and args[3]!="-"): msg["open"]=self.parseOpen(args[3])
+                if (len(args)>4 and args[4]!="-"): msg["display"]=self.parseDisplay(args[4])
+                if (len(args)>5 and args[5]!="-"): msg["close"]=self.parseClose(args[5])
+                print("Building message: ",msg)
+                messages.append(self.makemessage(msg["filename"],msg["colour"],msg["open"],msg["display"],msg["close"],msg["inverted"]))
+        p = Program(messages)
+        d = Device()
+        d.program(p)
+
     def example1(self):
         src="triangle.png"
         dst="testcvt6.png"
@@ -106,6 +144,12 @@ class PovConvert:
         d = Device()
         d.program(p)
 
+    def parseBool(self,value):
+        if value=="": return False
+        if value.lower()[:1] in ('f','n','-'): return False
+        if value=="0": return False
+        return True
+    
     def parseEnum(self,enum,value):
         key=value.strip().lower()
         for k,v in enum.__members__.items():
@@ -128,8 +172,9 @@ class PovConvert:
         
     def parsearguments(self,args=None):
         parser = argparse.ArgumentParser(description='POV Image Handler')
-        parser.add_argument("--action",choices=["load","convert","run"],required=True,
-                            help="load = send image to display, convert = create displayable image,run = convert then load")
+        parser.add_argument("--action",choices=["load","convert","run","script"],default="load",
+                            help="load = send image to display, convert = create displayable image,run = convert then load,"+
+                            "script = infile is a text file with a list of files to load as one sequence.")
         parser.add_argument("--colour",default="white",type=self.parseColour,help=",".join(Colour.__members__.keys()))
         parser.add_argument("--inverted",action="store_true",help="Invert pixel colours from black to white")
         parser.add_argument("--open",type=self.parseOpen,default="LeftRight",help=",".join(OpenTransition.__members__.keys()))
@@ -160,6 +205,9 @@ class PovConvert:
         if (parsed.action in ("run")):
             print("Loading "+parsed.outfile)
             self.runprogram(parsed.outfile,parsed.colour,parsed.inverted,parsed.open,parsed.display,parsed.close)
+
+        if (parsed.action=="script"):
+            self.runscript(parsed.infile,parsed)
 
         
 if __name__ == "__main__":
