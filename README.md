@@ -7,7 +7,7 @@ pip install microwave-usbfan
 
 ## usage
 ```
-usage: povconvert.py [-h] --action {load,convert,run} [--colour COLOUR]
+usage: povconvert.py [-h] --action {load,convert,run,script} [--colour COLOUR]
                      [--inverted] [--open OPEN] [--close CLOSE]
                      [--display DISPLAY] [--rotate ROTATE]
                      infile [outfile]
@@ -36,4 +36,21 @@ usage: povconvert.py [-h] --action {load,convert,run} [--colour COLOUR]
   --action="run"       Convert then load converted image.
 ```
   
-  
+### script
+```
+  --action="script"    Translate infile as a script.
+```
+
+## Script Syntax
+Up to 7 different images can be loaded into the standard usb fan. Use "script" to read a script file
+
+```
+# script format: filename colour inverted open display close
+# Arguments left blank or with (-) will use defaults or command line values.
+# = comments
+
+wombatcvt.png blue true Clockwise Remain LeftRight
+crosshairs.png red false - Flash -
+```
+
+
