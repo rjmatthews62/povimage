@@ -3,3 +3,4 @@
 # = comments
 wombatcvt.png blue true Clockwise Remain LeftRight
 crosshairs.png red false - Flash -
+clockface.png yellow true Clockwise Clockwise UpDown

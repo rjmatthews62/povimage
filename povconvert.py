@@ -17,7 +17,7 @@ class PovConvert:
         result=self.transformimage(graphic)
         result.save(destination,"PNG")
         
-    def transformimage(self,graphic:Image):
+    def transformimage(self,graphic:Image,scale=1.0):
         img = Image.new("L", (self.XRESOLUTION-self.GAP, self.PIXELS))
         w,h = graphic.size
         cx=w//2
@@ -33,12 +33,15 @@ class PovConvert:
                 my=math.sin(angle)
                 for y in range(self.PIXELS):
                         ny=(y*ratio)+self.INNER_DIAMETER
-                        mr=ny * radius/self.OUTER_DIAMETER
+                        mr=(ny/scale) * radius/self.OUTER_DIAMETER
                         pixel=0
                         cnt=0
                         px=round(mr*mx)+cx
                         py=round(mr*my)+cy
-                        pixel=imgdata[px,py]
+                        try:
+                            pixel=imgdata[px,py]
+                        except:
+                            pixel=0
                         destmap[x,(self.PIXELS-y)-1]=pixel
         return img
 
@@ -181,6 +184,7 @@ class PovConvert:
         parser.add_argument("--close",type=self.parseClose,default="RightLeft",help=",".join(CloseTransition.__members__.keys()))
         parser.add_argument("--display",type=self.parseDisplay,default="Clockwise",help=",".join(MessageStyle.__members__.keys()))
         parser.add_argument("--rotate",type=int,default=0,help="Rotate image on convert (degrees)")
+        parser.add_argument("--scale",type=float, default=1.0,help="Scale image 1.0=normal")
         parser.add_argument("infile")
         parser.add_argument("outfile",nargs="?")
         parsed=parser.parse_args(args)
@@ -194,7 +198,7 @@ class PovConvert:
                 return
             image=Image.open(parsed.infile)
             self.OFFSET=parsed.rotate
-            dest=self.transformimage(image)
+            dest=self.transformimage(image,parsed.scale)
             dest.save(parsed.outfile)
             print("Saved to "+parsed.outfile)
 
