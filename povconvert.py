@@ -57,6 +57,7 @@ class PovConvert:
                 px=round(mr*mx)+cx
                 py=round(mr*my)+cy
                 d.arc((cx-mr,cy-mr,cx+mr,cy+mr),anglemin,anglemax,col,width=thickness)
+                data[px,py]=col
         del d
         return dest.transpose(PIL.Image.ROTATE_90)
     
