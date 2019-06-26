@@ -1,3 +1,4 @@
+import PIL
 from PIL import Image, ImageDraw
 from usbfan import Colour, Column, Device, Message, Program, OpenTransition,CloseTransition,MessageStyle
 from typing import Union,Any
@@ -16,7 +17,49 @@ class PovConvert:
         graphic=Image.open(filename);
         result=self.transformimage(graphic)
         result.save(destination,"PNG")
+
+    def renderdisplay(self, graphic:Image, width:int=320, colour:Colour=Colour.white, inverted:bool=False) -> Image:
+        """
+        Render an image as it would look on the POV
+        """
+        src=graphic.convert("L").load()
+        dest=Image.new("RGB",(width,width))
+        data=dest.load()
+        d=PIL.ImageDraw.Draw(dest)
+        cx=width//2
+        cy=width//2
+        radius=min(cx,cy)
+        ratio=(self.OUTER_DIAMETER-self.INNER_DIAMETER)/self.PIXELS
+        thickness=max(1,round(ratio)-1)
+        wedge=180/self.XRESOLUTION
+        try:
+            dcolor=PIL.ImageColor.getcolor(colour.name,"RGB")
+        except:
+            dcolor=PIL.ImageColor.getcolor("white","RGB")
         
+        black=PIL.ImageColor.getcolor("black","RGB")
+        for x in range(self.XRESOLUTION-self.GAP):
+            angle=math.radians(x*360/self.XRESOLUTION+self.OFFSET)
+            anglemin=x*360/self.XRESOLUTION+self.OFFSET-wedge
+            anglemax=x*360/self.XRESOLUTION+self.OFFSET+wedge
+            mx=math.cos(angle)
+            my=math.sin(angle)
+            
+            for y in range(self.PIXELS):
+                ny=(y*ratio)+self.INNER_DIAMETER
+                mr=ny*radius/self.OUTER_DIAMETER
+                pixel=src[x,(self.PIXELS-y)-1]
+                if inverted:
+                    col=dcolor if pixel<128 else black
+                else:    
+                    col=dcolor if pixel>=128 else black
+                cnt=0
+                px=round(mr*mx)+cx
+                py=round(mr*my)+cy
+                d.arc((cx-mr,cy-mr,cx+mr,cy+mr),anglemin,anglemax,col,width=thickness)
+        del d
+        return dest.transpose(PIL.Image.ROTATE_90)
+    
     def transformimage(self,graphic:Image,scale=1.0):
         img = Image.new("L", (self.XRESOLUTION-self.GAP, self.PIXELS))
         w,h = graphic.size
