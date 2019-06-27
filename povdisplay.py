@@ -1,14 +1,18 @@
-from tkinter import filedialog
-from tkinter import *
+""" Display, Convert and Edit usbfan bitmap files """
 import math
-
-from povconvert import PovConvert
-from usbfan import Colour
-
+from tkinter import filedialog
+# pylint: disable=wildcard-import
+# pylint: disable=unused-wildcard-import
+from tkinter import *
 # pip install pillow
 from PIL import Image, ImageTk
+from usbfan import Colour
+from povconvert import PovConvert
+
 
 class Window(Frame):
+    """ Main application"""
+
     def __init__(self, master=None):
         Frame.__init__(self, master)
         self.master = master
@@ -16,7 +20,7 @@ class Window(Frame):
 
         sourceframe=Frame(self)
         sourceframe.grid(row=0, column=0)
-        
+
         img = Label(sourceframe)
         img.pack()
 
@@ -38,11 +42,13 @@ class Window(Frame):
         button1= Button(master=buttonframe,text="Open", command=self.button1click)
         button1.pack(side=LEFT)
         self.inverted=IntVar()
-        ckInverted=Checkbutton(master=buttonframe,text="Inverted",variable=self.inverted,command=self.update)
+        ckInverted=Checkbutton(master=buttonframe,text="Inverted",
+                               variable=self.inverted,command=self.update)
         ckInverted.pack(side=LEFT)
 
         self.colour=StringVar()
-        colours=Spinbox(master=buttonframe,textvariable=self.colour,values=list(Colour.__members__.keys()),
+        colours=Spinbox(master=buttonframe,textvariable=self.colour,
+                        values=list(Colour.__members__.keys()),
                         command=self.update)
         colours.pack(side=LEFT)
         self.dither=IntVar()
@@ -51,18 +57,23 @@ class Window(Frame):
 
         bf2=Frame(self)
         bf2.grid(row=2,column=0,columnspan=2)
-        
+
         button2=Button(bf2,text="Convert",command=self.loadconvert)
         button2.pack(side=LEFT)
 
         self.rotate=IntVar()
         ckRotate=Scale(bf2,to=359, orient=HORIZONTAL, variable=self.rotate, command=self.doconvert)
         ckRotate.pack(side=LEFT)
+        self.original_image=None
+        self.filename=None
+        self.rendered_image=None
+        self.cvtfilename=None
         self.loadimage(Image.open("wombatcvt.png"))
 
         self.scale=DoubleVar()
         self.scale.set(1.0)
-        ckScale=Scale(bf2,from_=0.2, to=5, resolution=0.1, orient=HORIZONTAL, variable=self.scale, command=self.doconvert)
+        ckScale=Scale(bf2,from_=0.2, to=5, resolution=0.1, orient=HORIZONTAL,
+                      variable=self.scale, command=self.doconvert)
         ckScale.pack(side=LEFT)
 
         self.square=BooleanVar()
@@ -73,6 +84,7 @@ class Window(Frame):
         btnSave.pack(side=LEFT)
 
     def loadimage(self,graphic):
+        """ Load pov bitmap and display as it would look on pov"""
         self.original_image=graphic
         render = ImageTk.PhotoImage(self.original_image)
         self.lblImage1.configure(image=render)
@@ -80,21 +92,27 @@ class Window(Frame):
         self.update()
 
     def button1click(self):
+        """ Load pov bitmap filename"""
         filename =  filedialog.askopenfilename(title = "Select file",
-            filetypes = (("image files",("*.jpg","*.png")),("all files","*.*")))
-        if (filename!=""):
+                                               filetypes = (("image files",("*.jpg","*.png")),
+                                                            ("all files","*.*")))
+        if filename!="":
             self.filename=filename
             print("Loading "+filename)
             self.loadimage(Image.open(filename))
 
     def askSave(self):
-        filename =  filedialog.asksaveasfilename(title = "Select file",defaultextension=".png",
-            filetypes = (("image files",("*.jpg","*.png")),("all files","*.*")))
-        if (filename!=""):
+        """ Save pov bitmap file"""
+        filename =  filedialog.asksaveasfilename(title = "Select file",
+                                                 defaultextension=".png",
+                                                 filetypes = (("image files",("*.jpg","*.png")),
+                                                              ("all files","*.*")))
+        if filename!="":
             self.original_image.save(filename)
             print("saved")
-    
+
     def update(self):
+        """ Update display """
         pc=PovConvert()
         inverted=bool(self.inverted.get())
         colour=pc.parseColour(self.colour.get())
@@ -108,16 +126,21 @@ class Window(Frame):
         self.lblImage2.image=render2
 
     def loadconvert(self):
+        """ Load an image to convert """
         filename =  filedialog.askopenfilename(title = "Select file",
-            filetypes = (("image files",("*.jpg","*.png")),("all files","*.*")))
-        if (filename!=""):
+                                               filetypes = (("image files",
+                                                             ("*.jpg","*.png")),
+                                                            ("all files","*.*")))
+        if filename!="":
             self.cvtfilename=filename
             print("Converting "+filename)
             self.cvtimage=Image.open(filename)
             self.doconvert()
 
     def doconvert(self,arg=None):
-        if (self.cvtimage==None): return
+        """ Convert image to POV bitmap format """
+        # pylint: disable=unused-argument
+        if self.cvtimage is None: return
         baseimage=self.cvtimage
         img=self.cvtimage
         if (img.width>320 or self.cvtimage.width>=320):
@@ -135,23 +158,26 @@ class Window(Frame):
         self.loadimage(self.original_image)
 
     def mouseclick(self,event):
+        """ Handle mouse drawing for button 1 """
         self.draw(event.x,event.y,True)
 
     def mouseclick3(self,event):
+        """ Handle mouse drawing for button 3 """
         self.draw(event.x,event.y,False)
 
     def draw(self,dx,dy,pen):
+        """ Manually edit POV bitmap. pen: True=draw, False=erase """
         pc=PovConvert()
         w,h=self.rendered_image.size
         x=dx-w//2
         y=dy-h//2
         angle=math.degrees(math.atan2(y,x))+90
-        if (angle<0): angle+=360
+        if angle<0: angle+=360
         xpos=round(angle*pc.XRESOLUTION/360)
         dist=math.sqrt(x*x+y*y)
         radius=w//2
         pixelsize=pc.PIXELS*pc.OUTER_DIAMETER/pc.INNER_DIAMETER
-        innerpixel=pixelsize*pc.INNER_DIAMETER/pc.OUTER_DIAMETER         
+        innerpixel=pixelsize*pc.INNER_DIAMETER/pc.OUTER_DIAMETER
         ratio=radius/pixelsize
         ypos=round(dist/ratio)-innerpixel
         print(angle,dist,xpos,ypos,ratio,innerpixel)
@@ -159,9 +185,9 @@ class Window(Frame):
             pixels=self.original_image.load()
             pixels[xpos,(pc.PIXELS-ypos)-1]=255 if pen else 0
             self.loadimage(self.original_image)
-        
-        
-        
+
+
+
 root = Tk()
 app = Window(root)
 root.wm_title("Tkinter window")
