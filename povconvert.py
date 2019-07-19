@@ -27,9 +27,9 @@ class PovConvert:
         result=self.transformimage(graphic)
         result.save(destination,"PNG")
 
-    def renderdisplay(self, graphic:Image,
+    def renderdisplay(self, graphic:Image.Image,
                       width:int=320, colour:Colour=Colour.white,
-                      inverted:bool=False) -> Image:
+                      inverted:bool=False) -> Image.Image:
         """
         Render an image as it would look on the POV
         """
@@ -71,7 +71,7 @@ class PovConvert:
         del d
         return dest.transpose(PIL.Image.ROTATE_90)
 
-    def transformimage(self,graphic:Image,scale=1.0):
+    def transformimage(self,graphic:Image.Image,scale=1.0):
         """ Map a square image to a POV bitmap """
         img = Image.new("L", (self.XRESOLUTION-self.GAP, self.PIXELS))
         w,h = graphic.size
@@ -99,7 +99,7 @@ class PovConvert:
         return img
 
     @staticmethod
-    def getbwimage(img:Image) -> Image:
+    def getbwimage(img:Image.Image) -> Image.Image:
         """ Convert image to dithered bitmap """
         return img.convert(mode="1")
 
@@ -108,7 +108,7 @@ class PovConvert:
         graphic = Image.open(filename)
         return self.buildimagefromimage(graphic,colour,inverted)
 
-    def buildimagefromimage(self,graphic:Image,colour:Colour=Colour.white,inverted:bool=False):
+    def buildimagefromimage(self,graphic:Image.Image,colour:Colour=Colour.white,inverted:bool=False):
         """ Build a list of columns for creating a usbfan Message """
         img = Image.new('RGB', (Message.MAX_COLUMNS, Column.PIXELS))
         img.paste(graphic,(0,0))

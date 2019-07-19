@@ -190,5 +190,5 @@ class Window(Frame):
 
 root = Tk()
 app = Window(root)
-root.wm_title("Tkinter window")
+root.wm_title("Pov Display")
 root.mainloop()
