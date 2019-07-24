@@ -1,7 +1,7 @@
 import PIL
 from PIL import Image
 
-def exportimage(graphic):
+def exportimage(graphic, inverted=False):
     """ Build a list of columns for creating a usbfan Message """
     img=graphic.convert("L");
     data=img.load()
@@ -12,7 +12,9 @@ def exportimage(graphic):
         for y in range(graphic.height):
             if (y>=32):
                 break
-            if (data[x,y]<128):
+            bit = data[x,y]<128
+            if (inverted): bit = not(bit)
+            if (bit):
                 v=v+(1<<y)
         result+=hex(v)+","
     print(result)
@@ -36,7 +38,7 @@ def exportzigzag(width,height):
     print(result)
 
     
-#img=Image.open("clockface.png")
-#exportimage(img)
-exportzigzag(160,32)
+img=Image.open("poc.png")
+exportimage(img,inverted=True)
+#exportzigzag(160,32)
 
