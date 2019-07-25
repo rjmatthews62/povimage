@@ -1,5 +1,6 @@
 import PIL
 from PIL import Image
+from povconvert import PovConvert
 
 def exportimage(graphic, inverted=False):
     """ Build a list of columns for creating a usbfan Message """
@@ -20,6 +21,16 @@ def exportimage(graphic, inverted=False):
     print(result)
 
 
+def transformimage(fromfile,tofile):
+    pov=PovConvert()
+    pov.OUTER_DIAMETER=30
+    pov.INNER_DIAMETER=8
+    pov.PIXELS=32
+    pov.XRESOLUTION=160
+    pov.GAP=0
+    pov.cvtimage(fromfile,tofile)
+    
+    
 def exportzigzag(width,height):
     result=""
     y=0
@@ -38,7 +49,8 @@ def exportzigzag(width,height):
     print(result)
 
     
-img=Image.open("poc.png")
-exportimage(img,inverted=True)
-#exportzigzag(160,32)
+transformimage("wombat.png","wombat160x32.png")
+img=Image.open("wombat160x32.png")
+exportimage(img,inverted=False)
+
 
